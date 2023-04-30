@@ -1,4 +1,4 @@
-module github.com/sueta2016/labik3
+module github.com/sueta2016/labik-3
 
 go 1.20
 
