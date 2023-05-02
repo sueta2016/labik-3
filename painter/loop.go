@@ -61,19 +61,19 @@ func (l *Loop) StopAndWait() {
 
 // TODO: реалізувати власну чергу повідомлень.
 type messageQueue struct {
-  queue []Operation
+  Queue []Operation
 }
 
 func (Mq *messageQueue) push(op Operation) {
-  Mq.queue = append(Mq.queue, op)
+  Mq.Queue = append(Mq.Queue, op)
 }
 
 func (Mq *messageQueue) pull() Operation {
-  if len(Mq.queue) == 0 {
+  if len(Mq.Queue) == 0 {
     return nil
   }
 
-  op := Mq.queue[0]
-  Mq.queue = Mq.queue[1:]
+  op := Mq.Queue[0]
+  Mq.Queue = Mq.Queue[1:]
   return op
 }
