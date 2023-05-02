@@ -80,10 +80,10 @@ func TestLoop_Post_Success(t *testing.T) {
 	textureMock.On("Bounds").Return(image.Rectangle{})
 	operationOne.On("Do", textureMock).Return(true)
 
-	assert.Empty(t, loop.MsgQueue.Queue)
+	assert.Empty(t, loop.Mq.Queue)
 	loop.Post(operationOne)
 	time.Sleep(1 * time.Second)
-	assert.Empty(t, loop.MsgQueue.Queue)
+	assert.Empty(t, loop.Mq.Queue)
 
 	operationOne.AssertCalled(t, "Do", textureMock)
 	receiverMock.AssertCalled(t, "Update", textureMock)
@@ -108,10 +108,10 @@ func TestLoop_Post_Failure(t *testing.T) {
 	textureMock.On("Bounds").Return(image.Rectangle{})
 	operationOne.On("Do", textureMock).Return(false)
 
-	assert.Empty(t, loop.MsgQueue.Queue)
+	assert.Empty(t, loop.Mq.Queue)
 	loop.Post(operationOne)
 	time.Sleep(1 * time.Second)
-	assert.Empty(t, loop.MsgQueue.Queue)
+	assert.Empty(t, loop.Mq.Queue)
 
 	operationOne.AssertCalled(t, "Do", textureMock)
 	receiverMock.AssertNotCalled(t, "Update", textureMock)
@@ -138,11 +138,11 @@ func TestLoop_Post_Multiple_Success(t *testing.T) {
 	operationOne.On("Do", textureMock).Return(true)
 	operationTwo.On("Do", textureMock).Return(true)
 
-	assert.Empty(t, loop.MsgQueue.Queue)
+	assert.Empty(t, loop.Mq.Queue)
 	loop.Post(operationOne)
 	loop.Post(operationTwo)
 	time.Sleep(1 * time.Second)
-	assert.Empty(t, loop.MsgQueue.Queue)
+	assert.Empty(t, loop.Mq.Queue)
 
 	operationOne.AssertCalled(t, "Do", textureMock)
 	operationTwo.AssertCalled(t, "Do", textureMock)
