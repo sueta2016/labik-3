@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/sueta2016/labik-3/painter"
-	"github.com/sueta2016/labik-3/painter/lang"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -47,7 +46,7 @@ func Test_parse_struct(t *testing.T) {
 
 	for _, tc := range tests { 
 		t.Run(tc.name, func(t *testing.T) {
-			parser := &lang.Parser{}
+			parser := &Parser{}
 			ops, err := parser.Parse(strings.NewReader(tc.command))
 			if tc.op == nil {                                       
 				assert.Error(t, err) 
@@ -83,7 +82,7 @@ func Test_parse_func(t *testing.T) {
 		},
 	}
 
-	parser := &lang.Parser{}
+	parser := &Parser{}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

@@ -7,15 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sueta2016/labik-3/painter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/exp/shiny/screen"
 )
 
 type Mock struct {
-	mock.Mock 
-} 
+	mock.Mock
+}
 
 func (_ *Mock) NewBuffer(size image.Point) (screen.Buffer, error) {
 	return nil, nil
@@ -24,7 +23,6 @@ func (_ *Mock) NewBuffer(size image.Point) (screen.Buffer, error) {
 func (_ *Mock) NewWindow(opts *screen.NewWindowOptions) (screen.Window, error) {
 	return nil, nil
 }
-
 
 func (mockReceiver *Mock) Update(texture screen.Texture) {
 	mockReceiver.Called(texture)
@@ -70,7 +68,7 @@ func TestLoop_Post_Success(t *testing.T) {
 	texture := image.Pt(800, 800)
 	screenMock.On("NewTexture", texture).Return(textureMock, nil)
 	receiverMock.On("Update", textureMock).Return()
-	loop := painter.Loop{
+	loop := Loop{
 		Receiver: receiverMock,
 	}
 
@@ -80,10 +78,10 @@ func TestLoop_Post_Success(t *testing.T) {
 	textureMock.On("Bounds").Return(image.Rectangle{})
 	operationOne.On("Do", textureMock).Return(true)
 
-	assert.Empty(t, loop.Mq.Queue)
+	assert.Empty(t, loop.MsgQueue.Queue)
 	loop.Post(operationOne)
 	time.Sleep(1 * time.Second)
-	assert.Empty(t, loop.Mq.Queue)
+	assert.Empty(t, loop.MsgQueue.Queue)
 
 	operationOne.AssertCalled(t, "Do", textureMock)
 	receiverMock.AssertCalled(t, "Update", textureMock)
@@ -98,7 +96,7 @@ func TestLoop_Post_Failure(t *testing.T) {
 	texture := image.Pt(800, 800)
 	screenMock.On("NewTexture", texture).Return(textureMock, nil)
 	receiverMock.On("Update", textureMock).Return()
-	loop := painter.Loop{
+	loop := Loop{
 		Receiver: receiverMock,
 	}
 
@@ -108,10 +106,10 @@ func TestLoop_Post_Failure(t *testing.T) {
 	textureMock.On("Bounds").Return(image.Rectangle{})
 	operationOne.On("Do", textureMock).Return(false)
 
-	assert.Empty(t, loop.Mq.Queue)
+	assert.Empty(t, loop.MsgQueue.Queue)
 	loop.Post(operationOne)
 	time.Sleep(1 * time.Second)
-	assert.Empty(t, loop.Mq.Queue)
+	assert.Empty(t, loop.MsgQueue.Queue)
 
 	operationOne.AssertCalled(t, "Do", textureMock)
 	receiverMock.AssertNotCalled(t, "Update", textureMock)
@@ -126,7 +124,7 @@ func TestLoop_Post_Multiple_Success(t *testing.T) {
 	texture := image.Pt(800, 800)
 	screenMock.On("NewTexture", texture).Return(textureMock, nil)
 	receiverMock.On("Update", textureMock).Return()
-	loop := painter.Loop{
+	loop := Loop{
 		Receiver: receiverMock,
 	}
 
@@ -138,11 +136,11 @@ func TestLoop_Post_Multiple_Success(t *testing.T) {
 	operationOne.On("Do", textureMock).Return(true)
 	operationTwo.On("Do", textureMock).Return(true)
 
-	assert.Empty(t, loop.Mq.Queue)
+	assert.Empty(t, loop.MsgQueue.Queue)
 	loop.Post(operationOne)
 	loop.Post(operationTwo)
 	time.Sleep(1 * time.Second)
-	assert.Empty(t, loop.Mq.Queue)
+	assert.Empty(t, loop.MsgQueue.Queue)
 
 	operationOne.AssertCalled(t, "Do", textureMock)
 	operationTwo.AssertCalled(t, "Do", textureMock)
