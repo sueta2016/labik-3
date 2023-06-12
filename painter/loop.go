@@ -1,79 +1,82 @@
 package painter
 
 import (
-  "image"
+	"image"
+	"image/color"
 
-  "golang.org/x/exp/shiny/screen"
+	"golang.org/x/exp/shiny/screen"
 )
 
-// Receiver отримує текстуру, яка була підготовлена в результаті виконання команд у циелі подій.
 type Receiver interface {
-  Update(t screen.Texture)
+	Update(t screen.Texture)
 }
 
-// Loop реалізує цикл подій для формування текстури отриманої через виконання операцій отриманих з внутрішньої черги.
+
 type Loop struct {
-  Receiver Receiver
+	Receiver Receiver
 
-  next screen.Texture // текстура, яка зараз формується
-  prev screen.Texture // текстура, яка була відправленя останнього разу у Receiver
+	next screen.Texture 
+	prev screen.Texture 
 
-  Mq messageQueue
+	mq       MessageQueue
+	state    TextureState
+	doneFunc func()
 }
 
-var size = image.Pt(800, 800)
+var size = image.Pt(600, 600)
 
-// Start запускає цикл подій. Цей метод потрібно запустити до того, як викликати на ньому будь-які інші методи.
+
 func (l *Loop) Start(s screen.Screen) {
-  l.next, _ = s.NewTexture(size)
-  l.prev, _ = s.NewTexture(size)
+	l.next, _ = s.NewTexture(size)
+	l.mq = MessageQueue{queue: make(chan Operation)}
+	l.state = TextureState{backgroundColor: &Fill{Color: color.White}}
 
-  // TODO: ініціалізувати чергу подій.
-  // TODO: запустити рутину обробки повідомлень у черзі подій.
-  l.Mq = messageQueue{}
-  go l.eventProcess()
+	go func() {
+		for {
+			e := l.mq.Pull()
+
+			switch e.(type) {
+			case Figure, BgRect, Move, Fill, Reset:
+				e.Update(&l.state)
+			case Update:
+				l.state.backgroundColor.Do(l.next)
+
+				if l.state.backgroundRect != nil {
+					l.state.backgroundRect.Do(l.next)
+				}
+
+				for _, fig := range l.state.figureCenters {
+					fig.Do(l.next)
+				}
+				l.prev = l.next
+				l.Receiver.Update(l.next)
+				l.next, _ = s.NewTexture(size)
+			}
+
+			if l.doneFunc != nil {
+				l.doneFunc()
+			}
+		}
+	}()
 }
 
-func (l *Loop) eventProcess() {
-  for {
-    if op := l.Mq.pull(); op != nil {
-      update := op.Do(l.next)
-      if update {
-        l.Receiver.Update(l.next)
-        l.next, l.prev = l.prev, l.next
-      }
-    }
-  }
+
+func (l *Loop) Post(ol OperationList) {
+
+	for _, op := range ol {
+		l.mq.Push(op)
+	}
 }
 
-// Post додає нову операцію у внутрішню чергу.
-func (l *Loop) Post(op Operation) {
-  // TODO: реалізувати додавання операції в чергу. Поточна імплементація
-  if op != nil {
-    l.Mq.push(op)
-  }
+
+type MessageQueue struct {
+	queue chan Operation
 }
 
-// StopAndWait сигналізує
-func (l *Loop) StopAndWait() {
-
+func (mq *MessageQueue) Push(op Operation) {
+	mq.queue <- op
 }
 
-// TODO: реалізувати власну чергу повідомлень.
-type messageQueue struct {
-  Queue []Operation
-}
-
-func (Mq *messageQueue) push(op Operation) {
-  Mq.Queue = append(Mq.Queue, op)
-}
-
-func (Mq *messageQueue) pull() Operation {
-  if len(Mq.Queue) == 0 {
-    return nil
-  }
-
-  op := Mq.Queue[0]
-  Mq.Queue = Mq.Queue[1:]
-  return op
+func (mq *MessageQueue) Pull() Operation {
+	return <-mq.queue
 }
