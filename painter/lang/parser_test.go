@@ -1,4 +1,4 @@
-package test
+package lang
 
 import (
 	"image/color"
