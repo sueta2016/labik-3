@@ -64,23 +64,29 @@ type messageQueue struct {
 }
 
 func (MsgQueue *messageQueue) Push(op Operation) {
+  
 	MsgQueue.mu.Lock()
 	defer MsgQueue.mu.Unlock()
 	MsgQueue.Queue = append(MsgQueue.Queue, op)
+
 	if MsgQueue.blocked != nil {
 		close(MsgQueue.blocked)
 		MsgQueue.blocked = nil
-	}}
+	}
+}
 
 func (MsgQueue *messageQueue) Pull() Operation {
+
 	MsgQueue.mu.Lock()
 	defer MsgQueue.mu.Unlock()
+
 	for len(MsgQueue.Queue) == 0 {
 		MsgQueue.blocked = make(chan struct{})
 		MsgQueue.mu.Unlock()
 		<-MsgQueue.blocked
 		MsgQueue.mu.Lock()
 	}
+
 	op := MsgQueue.Queue[0]
 	MsgQueue.Queue[0] = nil
 	MsgQueue.Queue = MsgQueue.Queue[1:]
