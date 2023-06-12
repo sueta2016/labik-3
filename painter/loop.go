@@ -23,7 +23,7 @@ type Loop struct {
 	doneFunc func()
 }
 
-var size = image.Pt(600, 600)
+var size = image.Pt(800, 800)
 
 
 func (l *Loop) Start(s screen.Screen) {
